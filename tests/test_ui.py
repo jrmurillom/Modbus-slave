@@ -190,3 +190,36 @@ def test_ui_reset_values_with_active_clients_warning(qtbot, monkeypatch):
     assert len(sys_entries) >= 1
     assert "TODOS los bloques" in sys_entries[-1].description
 
+
+def test_rx_visual_increment_via_logger_packets(qtbot):
+    """Prueba de regresión: garantiza que logger.log_packet() incrementa visualmente la cabecera Rx en la GUI."""
+    ds = ThreadSafeDataStore(slave_id=1, size=50)
+    logger = TrafficLogger()
+    window = MainWindow(datastore=ds, logger=logger)
+    qtbot.addWidget(window)
+
+    # Estado inicial: Rx = 0
+    assert "Rx = 0" in window.lbl_telemetry_header.text()
+    assert window.traffic_dock.table.rowCount() == 0
+
+    # Simular llegada de trama Modbus real mediante logger.log_packet (RX)
+    raw_packet = b"\x00\x01\x00\x00\x00\x06\x01\x03\x00\x00\x00\x02"
+    logger.log_packet(is_tx=False, raw_data=raw_packet)
+
+    # Procesar eventos de Qt para que las señales del bridge se despachen
+    qtbot.wait(50)
+
+    # El contador visual en el encabezado DEBE mostrar Rx = 1
+    assert "Rx = 1" in window.lbl_telemetry_header.text()
+    # El Sniffer de tráfico DEBE tener la fila añadida en tiempo real
+    assert window.traffic_dock.table.rowCount() == 1
+    assert window.traffic_dock.table.item(0, 1).text() == "RX"
+
+    # Simular una segunda trama RX
+    logger.log_packet(is_tx=False, raw_data=raw_packet)
+    qtbot.wait(50)
+
+    assert "Rx = 2" in window.lbl_telemetry_header.text()
+    assert window.traffic_dock.table.rowCount() == 2
+
+

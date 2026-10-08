@@ -191,6 +191,13 @@ class TrafficLogger:
 
         self._entries.append(entry)
 
+        # Notificar a los observadores (UI)
+        for listener in list(self._listeners):
+            try:
+                listener(entry)
+            except Exception:
+                pass
+
         return entry
 
     def log_system_event(self, description: str) -> PacketEntry:

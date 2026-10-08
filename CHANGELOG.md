@@ -5,6 +5,14 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.1.1] - 2026-10-08
+
+### Corregido
+- **Notificación en Vivo de Telemetría Rx y Sniffer:**
+  - Restaurado el bucle de notificación a observadores en `TrafficLogger.log_packet()`, solucionando la congelación del contador visual `Rx = X` en cabecera y asegurando la llegada de tramas RX/TX en tiempo real al sniffer.
+  - Añadido test de regresión estricto `test_rx_visual_increment_via_logger_packets` para blindar la actualización de telemetría ante futuras modificaciones.
+  - Suite de pruebas ampliada a 42 tests automatizados pasando al 100%.
+
 ## [1.1.0] - 2026-10-08
 
 ### Añadido
