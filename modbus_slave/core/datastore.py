@@ -348,3 +348,86 @@ class ThreadSafeDataStore:
                 int_vals = [int(v) & 0xFFFF for v in values]
                 self._holding_registers[address:address + count] = int_vals
                 self._notify_change(ModbusBlockType.HOLDING_REGISTERS.value, address, count, old_vals, int_vals, source="master")
+
+    # ==========================================
+    # Restablecimiento de Valores (Reset Values)
+    # ==========================================
+
+    def reset_values(self, block: Optional[str] = None, source: str = "local") -> None:
+        """Restablece a cero (o False) los registros de memoria de forma atómica y thread-safe.
+
+        Args:
+            block: Bloque específico (ModbusBlockType value) o None para todos los 4 bloques.
+            source: Origen de la acción (default: 'local').
+        """
+        with self._lock:
+            target_blocks = (
+                [block]
+                if block
+                else [
+                    ModbusBlockType.HOLDING_REGISTERS.value,
+                    ModbusBlockType.INPUT_REGISTERS.value,
+                    ModbusBlockType.COILS.value,
+                    ModbusBlockType.DISCRETE_INPUTS.value,
+                ]
+            )
+
+            for b in target_blocks:
+                if b == ModbusBlockType.HOLDING_REGISTERS.value:
+                    old_vals = list(self._holding_registers)
+                    clean_vals = [0] * self.size
+                    self._holding_registers = list(clean_vals)
+                    if self._pymodbus_runtime and hasattr(self._pymodbus_runtime, "block"):
+                        try:
+                            hr_block = self._pymodbus_runtime.block.get("h")
+                            if hr_block:
+                                hr_block[2][:self.size] = clean_vals
+                        except Exception:
+                            pass
+                    self._notify_change(b, 0, self.size, old_vals, clean_vals, source)
+
+                elif b == ModbusBlockType.INPUT_REGISTERS.value:
+                    old_vals = list(self._input_registers)
+                    clean_vals = [0] * self.size
+                    self._input_registers = list(clean_vals)
+                    if self._pymodbus_runtime and hasattr(self._pymodbus_runtime, "block"):
+                        try:
+                            ir_block = self._pymodbus_runtime.block.get("i")
+                            if ir_block:
+                                ir_block[2][:self.size] = clean_vals
+                        except Exception:
+                            pass
+                    self._notify_change(b, 0, self.size, old_vals, clean_vals, source)
+
+                elif b == ModbusBlockType.COILS.value:
+                    old_vals = list(self._coils)
+                    clean_vals = [False] * self.size
+                    self._coils = list(clean_vals)
+                    if self._pymodbus_runtime and hasattr(self._pymodbus_runtime, "block"):
+                        try:
+                            c_block = self._pymodbus_runtime.block.get("c")
+                            if c_block:
+                                from pymodbus.simulator.simutils import SimUtils
+                                bit_list = SimUtils.registersToBits(c_block[2])
+                                bit_list[:self.size] = clean_vals
+                                c_block[2][:] = SimUtils.bitsToRegisters(bit_list)
+                        except Exception:
+                            pass
+                    self._notify_change(b, 0, self.size, old_vals, clean_vals, source)
+
+                elif b == ModbusBlockType.DISCRETE_INPUTS.value:
+                    old_vals = list(self._discrete_inputs)
+                    clean_vals = [False] * self.size
+                    self._discrete_inputs = list(clean_vals)
+                    if self._pymodbus_runtime and hasattr(self._pymodbus_runtime, "block"):
+                        try:
+                            d_block = self._pymodbus_runtime.block.get("d")
+                            if d_block:
+                                from pymodbus.simulator.simutils import SimUtils
+                                bit_list = SimUtils.registersToBits(d_block[2])
+                                bit_list[:self.size] = clean_vals
+                                d_block[2][:] = SimUtils.bitsToRegisters(bit_list)
+                        except Exception:
+                            pass
+                    self._notify_change(b, 0, self.size, old_vals, clean_vals, source)
+

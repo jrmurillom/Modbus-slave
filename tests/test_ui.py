@@ -118,3 +118,75 @@ def test_shortcuts_dialog(qtbot):
     assert "Ctrl + G" in keys
     assert "F1" in keys
     assert "F8" in keys
+    assert "Ctrl + Shift + R" in keys
+
+
+def test_ui_reset_values_without_clients(qtbot, monkeypatch):
+    from PySide6.QtWidgets import QMessageBox
+
+    ds = ThreadSafeDataStore(slave_id=1, size=50)
+    ds.set_holding_registers(0, [777, 888, 999])
+    logger = TrafficLogger()
+    window = MainWindow(datastore=ds, logger=logger)
+    qtbot.addWidget(window)
+
+    idx_val0 = window.table_model.index(0, 2)
+    assert window.table_model.data(idx_val0) == "777"
+
+    # Caso 1: Operador cancela el diálogo -> No se debe alterar nada
+    monkeypatch.setattr(QMessageBox, "question", lambda *args, **kwargs: QMessageBox.StandardButton.No)
+    window._confirm_and_reset_values(all_blocks=False)
+    assert ds.get_holding_register(0) == 777
+    assert window.table_model.data(idx_val0) == "777"
+
+    # Caso 2: Operador confirma (Yes) -> Se resetea el bloque actual a cero
+    monkeypatch.setattr(QMessageBox, "question", lambda *args, **kwargs: QMessageBox.StandardButton.Yes)
+    qtbot.mouseClick(window.btn_reset_values, Qt.MouseButton.LeftButton)
+
+    assert ds.get_holding_register(0) == 0
+    assert ds.get_holding_register(1) == 0
+    assert window.table_model.data(idx_val0) == "0"
+
+    # Verificar que el evento de auditoría SYS fue inyectado en el Sniffer
+    sys_entries = [e for e in logger.get_entries() if e.direction == "SYS"]
+    assert len(sys_entries) == 1
+    assert "Reset Values" in sys_entries[0].description
+
+
+def test_ui_reset_values_with_active_clients_warning(qtbot, monkeypatch):
+    from PySide6.QtWidgets import QMessageBox
+
+    ds = ThreadSafeDataStore(slave_id=1, size=50)
+    ds.set_holding_registers(0, [123, 456])
+    ds.set_coils(0, [True, True])
+    logger = TrafficLogger()
+    logger.register_client_connect("192.168.1.50:50201")
+    assert logger.connected_clients == 1
+
+    window = MainWindow(datastore=ds, logger=logger)
+    qtbot.addWidget(window)
+
+    warning_called = []
+
+    def mock_warning(parent, title, text, buttons, default):
+        warning_called.append((title, text))
+        return QMessageBox.StandardButton.Yes
+
+    monkeypatch.setattr(QMessageBox, "warning", mock_warning)
+
+    # Restablecer TODOS los bloques en caliente con clientes conectados
+    window._confirm_and_reset_values(all_blocks=True)
+
+    # Debe haberse invocado el diálogo de WARNING específico
+    assert len(warning_called) == 1
+    assert "1 cliente(s) Modbus TCP conectado(s)" in warning_called[0][1]
+
+    # Todos los bloques deben haberse puesto a 0
+    assert ds.get_holding_register(0) == 0
+    assert ds.get_coil(0) is False
+
+    # Debe haberse registrado en la auditoría del sniffer
+    sys_entries = [e for e in logger.get_entries() if e.direction == "SYS"]
+    assert len(sys_entries) >= 1
+    assert "TODOS los bloques" in sys_entries[-1].description
+

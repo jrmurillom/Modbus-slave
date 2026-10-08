@@ -27,6 +27,7 @@ class KeyboardShortcutsDialog(QDialog):
         ("Navegación", "Flechas ↑ ↓ ← →", "Moverse entre celdas y registros"),
         ("Edición", "Enter / F2", "Editar in-line el valor o alias de la celda"),
         ("Edición", "Espacio (Space)", "Alternar estado binario (0 / 1) en Coils y Discrete Inputs"),
+        ("Edición", "Ctrl + Shift + R", "Restablecer registros a cero (Reset Values) on-the-fly"),
         ("Sniffer", "Ctrl + C", "Copiar tramas seleccionadas al portapapeles"),
         ("Proyecto", "Ctrl + N", "Crear nuevo proyecto"),
         ("Proyecto", "Ctrl + O", "Abrir proyecto existente (.json)"),

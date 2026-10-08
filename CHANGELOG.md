@@ -5,6 +5,17 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.1.0] - 2026-10-08
+
+### Añadido
+- **Restablecimiento de Valores (Reset Values On-The-Fly):**
+  - Restablecimiento en caliente de registros a cero/falso sin desconectar sockets Modbus TCP ni reiniciar el servidor.
+  - Botón dedicado en cabecera de telemetría junto a `Reset Rx`.
+  - Acciones en menú `Edición`: *Restablecer Bloque Actual a Cero...* (`Ctrl + Shift + R`) y *Restablecer Todos los Bloques a Cero...*.
+  - Salvaguarda condicional inteligente: confirmación estándar o alerta de advertencia severa si hay clientes Modbus TCP activos en tiempo real.
+  - Auditoría de sistema registrada en el Sniffer de tráfico (`SYS: Operador ejecutó Reset Values en caliente`).
+  - Cobertura de pruebas ampliada a 41 tests automatizados (unitarios, concurrencia RLock, interfaz y E2E en caliente).
+
 ## [1.0.0] - 2026-10-08
 
 ### Añadido
@@ -42,3 +53,4 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
   - Icono oficial de la aplicación rediseñado en formato Modern Tile 92% (Squircle industrial, bisel cian luminoso `#38bdf8` y matriz de cuadrantes `HR`, `Coil`, `IR`, `01` de alto contraste en barra de tareas).
 - **Pruebas Automatizadas:**
   - Suite de 35 pruebas unitarias e integrales (`pytest`) cubriendo todas las capas al 100%.
+

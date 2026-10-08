@@ -107,3 +107,97 @@ def test_thread_safety_concurrent_writes():
     # Todos los registros deben tener el último valor escrito
     for t_id in range(num_threads):
         assert ds.get_holding_register(t_id) == iterations_per_thread - 1
+
+
+def test_datastore_reset_single_block():
+    ds = ThreadSafeDataStore(size=50)
+    # Establecer datos iniciales en los 4 bloques
+    ds.set_holding_registers(0, [10, 20, 30])
+    ds.set_coils(0, [True, True, False])
+    ds.set_input_registers(0, [100, 200])
+    ds.set_discrete_inputs(0, [True, False])
+
+    notifications = []
+    ds.subscribe(lambda block, addr, count, old_v, new_v, src: notifications.append((block, count, src)))
+
+    # Resetear ÚNICAMENTE Holding Registers
+    ds.reset_values(ModbusBlockType.HOLDING_REGISTERS.value)
+
+    # Holding Registers deben estar en 0
+    assert ds.get_holding_registers(0, 3) == [0, 0, 0]
+    # Los demás bloques NO deben haber cambiado
+    assert ds.get_coils(0, 3) == [True, True, False]
+    assert ds.get_input_registers(0, 2) == [100, 200]
+    assert ds.get_discrete_inputs(0, 2) == [True, False]
+
+    # Verificar notificación
+    assert len(notifications) == 1
+    assert notifications[0] == (ModbusBlockType.HOLDING_REGISTERS.value, 50, "local")
+
+
+def test_datastore_reset_all_blocks():
+    ds = ThreadSafeDataStore(size=50)
+    # Cargar valores en los 4 bloques
+    ds.set_holding_registers(0, [111, 222])
+    ds.set_coils(0, [True, True])
+    ds.set_input_registers(0, [333, 444])
+    ds.set_discrete_inputs(0, [True, True])
+
+    notified_blocks = []
+    ds.subscribe(lambda block, addr, count, old_v, new_v, src: notified_blocks.append(block))
+
+    # Resetear TODOS los bloques
+    ds.reset_values(None)
+
+    # Todos los bloques deben estar a 0 o False
+    assert all(val == 0 for val in ds.get_holding_registers(0, 50))
+    assert all(val == 0 for val in ds.get_input_registers(0, 50))
+    assert all(val is False for val in ds.get_coils(0, 50))
+    assert all(val is False for val in ds.get_discrete_inputs(0, 50))
+
+    # Deben haberse notificado los 4 bloques
+    assert len(notified_blocks) == 4
+    assert ModbusBlockType.HOLDING_REGISTERS.value in notified_blocks
+    assert ModbusBlockType.INPUT_REGISTERS.value in notified_blocks
+    assert ModbusBlockType.COILS.value in notified_blocks
+    assert ModbusBlockType.DISCRETE_INPUTS.value in notified_blocks
+
+
+def test_datastore_reset_concurrent_safety():
+    """Garantiza atomicidad RLock: lecturas/escrituras masivas mientras se ejecuta reset_values."""
+    ds = ThreadSafeDataStore(size=100)
+    stop_event = threading.Event()
+    errors = []
+
+    def writer_loop():
+        while not stop_event.is_set():
+            try:
+                ds.set_holding_registers(0, [42] * 50)
+            except Exception as e:
+                errors.append(e)
+
+    def reader_loop():
+        while not stop_event.is_set():
+            try:
+                vals = ds.get_holding_registers(0, 50)
+                # Cada lectura debe ser atómica (o todos 0 o todos 42, nunca mezclas rotas)
+                if len(vals) != 50:
+                    errors.append(ValueError("Longitud inconsistente"))
+            except Exception as e:
+                errors.append(e)
+
+    t_writer = threading.Thread(target=writer_loop)
+    t_reader = threading.Thread(target=reader_loop)
+    t_writer.start()
+    t_reader.start()
+
+    # Ejecutar 50 reseteos concurrentes en caliente
+    for _ in range(50):
+        ds.reset_values(ModbusBlockType.HOLDING_REGISTERS.value)
+
+    stop_event.set()
+    t_writer.join()
+    t_reader.join()
+
+    assert len(errors) == 0
+

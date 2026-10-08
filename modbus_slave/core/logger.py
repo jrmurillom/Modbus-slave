@@ -191,7 +191,26 @@ class TrafficLogger:
 
         self._entries.append(entry)
 
-        # Notificar a la UI
+        return entry
+
+    def log_system_event(self, description: str) -> PacketEntry:
+        """Registra un evento administrativo o de auditoría del sistema en el sniffer."""
+        now = time.time()
+        entry = PacketEntry(
+            timestamp=now,
+            direction="SYS",
+            raw_bytes=b"",
+            hex_dump="-- SYSTEM EVENT --",
+            slave_id=0,
+            func_code=0,
+            description=description,
+            is_exception=False,
+            exception_code=0,
+        )
+
+        self._entries.append(entry)
+
+        # Notificar a los observadores (UI)
         for listener in list(self._listeners):
             try:
                 listener(entry)
@@ -199,3 +218,4 @@ class TrafficLogger:
                 pass
 
         return entry
+

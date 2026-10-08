@@ -197,8 +197,11 @@ class TrafficDockWidget(QDockWidget):
         # Coloreado según dirección
         if entry.direction == "RX":
             item_dir.setForeground(QColor(166, 227, 161)) # Verde
-        else:
+        elif entry.direction == "TX":
             item_dir.setForeground(QColor(137, 220, 235)) # Cyan
+        elif entry.direction == "SYS":
+            item_dir.setForeground(QColor(249, 226, 175)) # Dorado
+            item_desc.setForeground(QColor(249, 226, 175))
 
         if entry.is_exception:
             item_desc.setForeground(QColor(243, 139, 168)) # Rojo

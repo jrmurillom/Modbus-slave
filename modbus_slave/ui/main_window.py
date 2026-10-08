@@ -112,6 +112,13 @@ class MainWindow(QMainWindow):
         self.btn_reset_rx.clicked.connect(self._reset_rx_counter)
         telem_layout.addWidget(self.btn_reset_rx)
 
+        # Botón para resetear valores de registros a cero
+        self.btn_reset_values = QPushButton("Reset Values")
+        self.btn_reset_values.setToolTip("Restablecer a cero los registros de datos (Ctrl+Shift+R)")
+        self.btn_reset_values.setStyleSheet("font-size: 11px; padding: 2px 8px;")
+        self.btn_reset_values.clicked.connect(lambda: self._confirm_and_reset_values(all_blocks=False))
+        telem_layout.addWidget(self.btn_reset_values)
+
         telem_layout.addStretch()
 
         # Indicador de enlace
@@ -187,6 +194,18 @@ class MainWindow(QMainWindow):
         act_goto.setToolTip("Saltar rápidamente a una dirección de registro (Ctrl+G)")
         act_goto.triggered.connect(self._go_to_address)
         edit_menu.addAction(act_goto)
+
+        edit_menu.addSeparator()
+        act_reset_current = QAction("Restablecer &Bloque Actual a Cero...", self)
+        act_reset_current.setShortcut(QKeySequence("Ctrl+Shift+R"))
+        act_reset_current.setToolTip("Restablece a cero los registros del bloque actual on-the-fly (Ctrl+Shift+R)")
+        act_reset_current.triggered.connect(lambda: self._confirm_and_reset_values(all_blocks=False))
+        edit_menu.addAction(act_reset_current)
+
+        act_reset_all = QAction("Restablecer &Todos los Bloques a Cero...", self)
+        act_reset_all.setToolTip("Restablece a cero todos los registros de los 4 bloques Modbus on-the-fly")
+        act_reset_all.triggered.connect(lambda: self._confirm_and_reset_values(all_blocks=True))
+        edit_menu.addAction(act_reset_all)
 
         # Menú Conexión
         conn_menu = menubar.addMenu("&Conexión")
@@ -403,6 +422,59 @@ class MainWindow(QMainWindow):
         self.logger.reset_counters()
         self._update_telemetry_header()
         self.traffic_dock.update_stats()
+
+    def _confirm_and_reset_values(self, all_blocks: bool = False) -> None:
+        """Restablece los registros a cero on-the-fly con salvaguarda condicional inteligente."""
+        block_names = {
+            ModbusBlockType.COILS.value: "Coils (0x)",
+            ModbusBlockType.DISCRETE_INPUTS.value: "Discrete Inputs (1x)",
+            ModbusBlockType.INPUT_REGISTERS.value: "Input Registers (3x)",
+            ModbusBlockType.HOLDING_REGISTERS.value: "Holding Registers (4x)",
+        }
+        block_label = (
+            "TODOS los bloques (0x, 1x, 3x, 4x)"
+            if all_blocks
+            else block_names.get(self.current_block, self.current_block)
+        )
+        target_block = None if all_blocks else self.current_block
+
+        clients_count = self.logger.connected_clients
+        if clients_count > 0:
+            # Salvaguarda 1: Advertencia severa en caliente si hay maestros Modbus conectados
+            msg = (
+                f"⚠️ ATENCIÓN: Hay {clients_count} cliente(s) Modbus TCP conectado(s) en este momento.\n\n"
+                f"Restablecer a cero {block_label} en caliente alterará las lecturas del maestro en tiempo real.\n\n"
+                f"¿Desea forzar el restablecimiento a cero de inmediato?"
+            )
+            res = QMessageBox.warning(
+                self,
+                "Confirmar Restablecimiento en Caliente (On-The-Fly)",
+                msg,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+        else:
+            # Salvaguarda 2: Confirmación estándar para prevenir clics accidentales
+            msg = f"¿Está seguro de que desea restablecer a cero {block_label}?"
+            res = QMessageBox.question(
+                self,
+                "Restablecer Valores a Cero",
+                msg,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+
+        if res != QMessageBox.StandardButton.Yes:
+            return
+
+        # Ejecutar reseteo atómico thread-safe
+        self.datastore.reset_values(block=target_block, source="local")
+
+        # Salvaguarda 3: Trazabilidad en el Sniffer de Tráfico
+        audit_desc = f"Operador ejecutó Reset Values en caliente: {block_label}"
+        self.logger.log_system_event(audit_desc)
+
+        self.statusBar().showMessage(f"✓ Registros restablecidos a cero ({block_label})", 4000)
 
     def _on_packet_logged(self, entry: PacketEntry) -> None:
         self.traffic_dock.add_packet(entry)

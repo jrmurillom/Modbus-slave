@@ -276,14 +276,16 @@ class RegisterTableModel(QAbstractTableModel):
             return
 
         span = get_register_span(self.format_type)
-        row = (address - self.start_address) // span
+        start_row = max(0, (address - self.start_address) // span)
+        end_row = min(self.rowCount() - 1, ((address + count - 1) - self.start_address) // span)
 
-        if 0 <= row < self.rowCount():
+        if start_row <= end_row and start_row < self.rowCount() and end_row >= 0:
             if source == "master":
-                self._recently_modified[address] = time.time()
+                for a in range(address, min(address + count, self.start_address + self.display_count)):
+                    self._recently_modified[a] = time.time()
 
-            start_idx = self.index(row, 0)
-            end_idx = self.index(row, len(self.COLUMNS) - 1)
+            start_idx = self.index(start_row, 0)
+            end_idx = self.index(end_row, len(self.COLUMNS) - 1)
             self.dataChanged.emit(start_idx, end_idx, [
                 Qt.ItemDataRole.DisplayRole,
                 Qt.ItemDataRole.EditRole,

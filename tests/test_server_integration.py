@@ -66,3 +66,45 @@ def test_server_client_integration_e2e():
             assert server.is_running is False
 
     asyncio.run(_run())
+
+
+def test_server_reset_values_on_the_fly_e2e():
+    """Valida que reset_values() opera on-the-fly con cliente Modbus TCP en comunicación activa."""
+    async def _run():
+        port = 5031
+        ds = ThreadSafeDataStore(slave_id=1, size=50)
+        logger = TrafficLogger()
+        server = ModbusTcpServerEngine(datastore=ds, logger=logger)
+
+        ds.set_holding_registers(0, [100, 200, 300])
+        server.start(host="127.0.0.1", port=port)
+
+        try:
+            client = AsyncModbusTcpClient("127.0.0.1", port=port)
+            connected = await client.connect()
+            assert connected is True
+
+            # 1. Maestro lee valores iniciales
+            rr1 = await client.read_holding_registers(address=0, count=3, device_id=1)
+            assert not rr1.isError()
+            assert rr1.registers == [100, 200, 300]
+
+            # 2. Reseteo ON-THE-FLY en caliente por el operador
+            ds.reset_values(ModbusBlockType.HOLDING_REGISTERS.value)
+
+            # 3. Maestro lee de inmediato SIN desconexión: debe leer 0
+            rr2 = await client.read_holding_registers(address=0, count=3, device_id=1)
+            assert not rr2.isError()
+            assert rr2.registers == [0, 0, 0]
+
+            # 4. El socket permanece vivo: maestro puede seguir escribiendo
+            wr = await client.write_register(address=0, value=999, device_id=1)
+            assert not wr.isError()
+            assert ds.get_holding_register(0) == 999
+
+            client.close()
+        finally:
+            server.stop()
+
+    asyncio.run(_run())
+
