@@ -39,6 +39,6 @@ y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 - **Portabilidad y Distribución:**
   - Script automatizado `build_exe.bat` para empaquetado PyInstaller.
   - Binario autónomo compilado `dist/ModbusSlavePro.exe` (~47 MB) con icono incrustado en el recurso PE.
-  - Icono oficial de la aplicación (Matriz de Registros Modbus).
+  - Icono oficial de la aplicación rediseñado en formato Modern Tile 92% (Squircle industrial, bisel cian luminoso `#38bdf8` y matriz de cuadrantes `HR`, `Coil`, `IR`, `01` de alto contraste en barra de tareas).
 - **Pruebas Automatizadas:**
   - Suite de 35 pruebas unitarias e integrales (`pytest`) cubriendo todas las capas al 100%.

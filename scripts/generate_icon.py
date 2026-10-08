@@ -1,4 +1,4 @@
-"""Script para generar el icono oficial de Modbus Slave Pro (Opción 1: Matriz de Registros).
+"""Script para generar el icono oficial de Modbus Slave Pro (Opción C: Modern Tile 92%).
 
 Genera:
 - modbus_slave/assets/icon.png (512x512 PNG con canal alfa)
@@ -11,6 +11,7 @@ from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import (
     QBrush,
     QColor,
+    QFont,
     QGuiApplication,
     QImage,
     QLinearGradient,
@@ -28,117 +29,76 @@ def render_icon(size: int = 512) -> QImage:
     painter = QPainter(img)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
     painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+    painter.setRenderHint(QPainter.RenderHint.TextAntialiasing, True)
 
     scale = size / 100.0
 
-    # 1. Contenedor Base (Squircle)
-    margin = 5.0 * scale
-    rect_size = 90.0 * scale
+    # 1. Contenedor Base Squircle Modern Tile (92% de ocupación óptica)
+    margin = 4.0 * scale
+    rect_size = 92.0 * scale
     radius = 22.0 * scale
 
     bg_grad = QLinearGradient(0, 0, size, size)
-    bg_grad.setColorAt(0.0, QColor("#1e1e2e"))
-    bg_grad.setColorAt(1.0, QColor("#11111b"))
-
-    rim_grad = QLinearGradient(0, 0, size, size)
-    rim_grad.setColorAt(0.0, QColor("#45475a"))
-    rim_grad.setColorAt(1.0, QColor("#313244"))
+    bg_grad.setColorAt(0.0, QColor("#1e293b"))
+    bg_grad.setColorAt(1.0, QColor("#0f172a"))
 
     squircle_path = QPainterPath()
     squircle_path.addRoundedRect(QRectF(margin, margin, rect_size, rect_size), radius, radius)
 
     painter.fillPath(squircle_path, QBrush(bg_grad))
-    painter.strokePath(squircle_path, QPen(QBrush(rim_grad), 2.5 * scale))
+    # Bisel luminoso cian (#38bdf8) de alta visibilidad en barra oscura o clara
+    painter.strokePath(squircle_path, QPen(QColor("#38bdf8"), 2.2 * scale))
 
-    # 2. Pistas de circuito salientes (Traces exteriores)
-    trace_pen = QPen(QColor("#45475a"), 2.2 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
-    painter.setPen(trace_pen)
+    # 2. Configuración de Fuente Monospace para Registros
+    font = QFont("Consolas")
+    font.setPixelSize(int(14.0 * scale))
+    font.setBold(True)
+    painter.setFont(font)
 
-    # Superior / Inferior
-    for x in [36.0, 50.0, 64.0]:
-        painter.drawLine(QPointF(x * scale, 15.0 * scale), QPointF(x * scale, 28.0 * scale))
-        painter.drawLine(QPointF(x * scale, 85.0 * scale), QPointF(x * scale, 72.0 * scale))
+    # 3. Cuadrante 1: Holding Register "HR" (Superior Izquierda)
+    q1_rect = QRectF(18.0 * scale, 18.0 * scale, 28.0 * scale, 28.0 * scale)
+    q1_path = QPainterPath()
+    q1_path.addRoundedRect(q1_rect, 8.0 * scale, 8.0 * scale)
+    painter.fillPath(q1_path, QBrush(QColor(2, 132, 199, 75)))
+    painter.strokePath(q1_path, QPen(QColor("#38bdf8"), 2.0 * scale))
 
-    # Izquierda / Derecha
-    for y in [36.0, 50.0, 64.0]:
-        painter.drawLine(QPointF(15.0 * scale, y * scale), QPointF(28.0 * scale, y * scale))
-        painter.drawLine(QPointF(85.0 * scale, y * scale), QPointF(72.0 * scale, y * scale))
+    painter.setPen(QColor("#38bdf8"))
+    painter.drawText(q1_rect, int(Qt.AlignmentFlag.AlignCenter), "HR")
 
-    # 3. Resplandor exterior suave para el chip central
-    glow_color = QColor(137, 220, 235, 40)
-    for g_offset in [3.0, 2.0, 1.0]:
-        glow_pen = QPen(glow_color, g_offset * scale)
-        glow_path = QPainterPath()
-        glow_path.addRoundedRect(
-            QRectF((28.0 - g_offset * 0.5) * scale, (28.0 - g_offset * 0.5) * scale, (44.0 + g_offset) * scale, (44.0 + g_offset) * scale),
-            (8.0 + g_offset * 0.5) * scale,
-            (8.0 + g_offset * 0.5) * scale,
-        )
-        painter.strokePath(glow_path, glow_pen)
+    # 4. Cuadrante 2: Coil / Bit Activo "LED" (Superior Derecha)
+    q2_rect = QRectF(54.0 * scale, 18.0 * scale, 28.0 * scale, 28.0 * scale)
+    q2_path = QPainterPath()
+    q2_path.addRoundedRect(q2_rect, 8.0 * scale, 8.0 * scale)
+    painter.fillPath(q2_path, QBrush(QColor(22, 163, 74, 65)))
+    painter.strokePath(q2_path, QPen(QColor("#4ade80"), 2.0 * scale))
 
-    # 4. Chip Cuerpo Central
-    chip_path = QPainterPath()
-    chip_path.addRoundedRect(QRectF(28.0 * scale, 28.0 * scale, 44.0 * scale, 44.0 * scale), 8.0 * scale, 8.0 * scale)
-    painter.fillPath(chip_path, QBrush(QColor("#181825")))
-    painter.strokePath(chip_path, QPen(QColor("#89dceb"), 2.0 * scale))
-
-    # 5. Matriz de Registros Modbus 2x2
-    # Celda 1 (Holding Register Activo - Superior Izquierda)
-    c1_rect = QRectF(33.0 * scale, 33.0 * scale, 15.0 * scale, 15.0 * scale)
-    c1_path = QPainterPath()
-    c1_path.addRoundedRect(c1_rect, 3.0 * scale, 3.0 * scale)
-    painter.fillPath(c1_path, QBrush(QColor(137, 220, 235, 60)))
-    painter.strokePath(c1_path, QPen(QColor("#89dceb"), 1.6 * scale))
-
-    bar_pen_cyan = QPen(QColor("#89dceb"), 2.2 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
-    painter.setPen(bar_pen_cyan)
-    painter.drawLine(QPointF(36.5 * scale, 40.5 * scale), QPointF(44.5 * scale, 40.5 * scale))
-
-    # Celda 2 (Coil / Bit Activo - Superior Derecha)
-    c2_rect = QRectF(52.0 * scale, 33.0 * scale, 15.0 * scale, 15.0 * scale)
-    c2_path = QPainterPath()
-    c2_path.addRoundedRect(c2_rect, 3.0 * scale, 3.0 * scale)
-    painter.fillPath(c2_path, QBrush(QColor(166, 227, 161, 60)))
-    painter.strokePath(c2_path, QPen(QColor("#a6e3a1"), 1.6 * scale))
-
+    # Indicador Circular Coil On (Halo + Núcleo Esmeralda)
+    coil_center = QPointF(68.0 * scale, 32.0 * scale)
     painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(QBrush(QColor("#a6e3a1")))
-    painter.drawEllipse(QPointF(59.5 * scale, 40.5 * scale), 2.8 * scale, 2.8 * scale)
+    painter.setBrush(QBrush(QColor(74, 222, 128, 80)))
+    painter.drawEllipse(coil_center, 9.0 * scale, 9.0 * scale)
+    painter.setBrush(QBrush(QColor("#4ade80")))
+    painter.drawEllipse(coil_center, 5.0 * scale, 5.0 * scale)
 
-    # Celda 3 (Input Register - Inferior Izquierda)
-    c3_rect = QRectF(33.0 * scale, 52.0 * scale, 15.0 * scale, 15.0 * scale)
-    c3_path = QPainterPath()
-    c3_path.addRoundedRect(c3_rect, 3.0 * scale, 3.0 * scale)
-    painter.fillPath(c3_path, QBrush(QColor("#1e1e2e")))
-    painter.strokePath(c3_path, QPen(QColor("#45475a"), 1.6 * scale))
+    # 5. Cuadrante 3: Input Register "IR" (Inferior Izquierda)
+    q3_rect = QRectF(18.0 * scale, 54.0 * scale, 28.0 * scale, 28.0 * scale)
+    q3_path = QPainterPath()
+    q3_path.addRoundedRect(q3_rect, 8.0 * scale, 8.0 * scale)
+    painter.fillPath(q3_path, QBrush(QColor(51, 65, 85, 125)))
+    painter.strokePath(q3_path, QPen(QColor("#64748b"), 2.0 * scale))
 
-    bar_pen_slate = QPen(QColor("#45475a"), 2.2 * scale, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
-    painter.setPen(bar_pen_slate)
-    painter.drawLine(QPointF(36.5 * scale, 59.5 * scale), QPointF(44.5 * scale, 59.5 * scale))
+    painter.setPen(QColor("#94a3b8"))
+    painter.drawText(q3_rect, int(Qt.AlignmentFlag.AlignCenter), "IR")
 
-    # Celda 4 (Holding Register 2 - Inferior Derecha)
-    c4_rect = QRectF(52.0 * scale, 52.0 * scale, 15.0 * scale, 15.0 * scale)
-    c4_path = QPainterPath()
-    c4_path.addRoundedRect(c4_rect, 3.0 * scale, 3.0 * scale)
-    painter.fillPath(c4_path, QBrush(QColor(137, 220, 235, 50)))
-    painter.strokePath(c4_path, QPen(QColor("#89dceb"), 1.6 * scale))
+    # 6. Cuadrante 4: Discrete / Value "01" (Inferior Derecha)
+    q4_rect = QRectF(54.0 * scale, 54.0 * scale, 28.0 * scale, 28.0 * scale)
+    q4_path = QPainterPath()
+    q4_path.addRoundedRect(q4_rect, 8.0 * scale, 8.0 * scale)
+    painter.fillPath(q4_path, QBrush(QColor(2, 132, 199, 75)))
+    painter.strokePath(q4_path, QPen(QColor("#38bdf8"), 2.0 * scale))
 
-    painter.setPen(bar_pen_cyan)
-    painter.drawLine(QPointF(55.5 * scale, 59.5 * scale), QPointF(63.5 * scale, 59.5 * scale))
-
-    # 6. LED de Estado Superior Derecho (Verde Esmeralda con Halo)
-    led_center = QPointF(80.0 * scale, 20.0 * scale)
-    # Halo
-    halo_grad = QLinearGradient(led_center.x() - 6 * scale, led_center.y() - 6 * scale, led_center.x() + 6 * scale, led_center.y() + 6 * scale)
-    halo_grad.setColorAt(0.0, QColor(166, 227, 161, 100))
-    halo_grad.setColorAt(1.0, QColor(166, 227, 161, 0))
-    painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(QBrush(QColor(166, 227, 161, 50)))
-    painter.drawEllipse(led_center, 6.0 * scale, 6.0 * scale)
-
-    # Núcleo del LED
-    painter.setBrush(QBrush(QColor("#a6e3a1")))
-    painter.drawEllipse(led_center, 3.5 * scale, 3.5 * scale)
+    painter.setPen(QColor("#38bdf8"))
+    painter.drawText(q4_rect, int(Qt.AlignmentFlag.AlignCenter), "01")
 
     painter.end()
     return img
