@@ -1,0 +1,3 @@
+@echo off
+echo Iniciando Modbus Slave Pro en puerto 5020...
+.\.venv\Scripts\python.exe -m modbus_slave.main --port 5020

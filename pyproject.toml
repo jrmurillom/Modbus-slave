@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "modbus-slave-pro"
+version = "1.0.0"
+description = "Simulador y servidor industrial Modbus TCP de alto rendimiento con interfaz PySide6"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Roberto / Antigravity" }
+]
+dependencies = [
+    "PySide6>=6.6.0",
+    "pymodbus>=3.6.8",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-qt>=4.4.0",
+]
+
+[project.scripts]
+modbus-slave = "modbus_slave.main:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v"
