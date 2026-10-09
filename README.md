@@ -3,8 +3,9 @@
 ![Python](https://img.shields.io/badge/Python-3.11%2B-blue)
 ![PySide6](https://img.shields.io/badge/GUI-PySide6%20(Qt6)-green)
 ![Protocol](https://img.shields.io/badge/Protocol-Modbus%20TCP-orange)
-![License](https://img.shields.io/badge/License-MIT-purple)
-![Tests](https://img.shields.io/badge/Tests-34%20Passing-brightgreen)
+[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+[![CI](https://github.com/jrmurillom/Modbus-slave/actions/workflows/ci.yml/badge.svg)](https://github.com/jrmurillom/Modbus-slave/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/Tests-42%20Passing-brightgreen)
 
 Simulador y servidor Modbus TCP con interfaz gráfica de escritorio desarrollada en Python 3.11 y PySide6 (Qt6).
 
@@ -29,13 +30,13 @@ Simulador y servidor Modbus TCP con interfaz gráfica de escritorio desarrollada
 
 ---
 
-## 📦 Portabilidad
+## 📦 Portabilidad y Descargas
 
 La aplicación puede ejecutarse de forma independiente en Windows sin requerir instalación previa de Python ni configuración de dependencias:
 
-- **Ejecutable autónomo:** `dist\ModbusSlavePro.exe` (~47 MB).
+- **Descarga directa:** Puedes descargar el ejecutable listo para usar `ModbusSlavePro.exe` desde la sección de [Releases de GitHub](https://github.com/jrmurillom/Modbus-slave/releases).
 - **Transporte directo:** Un único archivo listo para ejecutarse desde el disco o memoria USB en Windows 10 u 11.
-- **Compilador automático:** Incluye el script `build_exe.bat` para generar el ejecutable en un solo clic utilizando PyInstaller.
+- **Compilador local:** Incluye el script `build_exe.bat` para compilar el ejecutable localmente utilizando PyInstaller.
 
 ---
 
@@ -82,25 +83,6 @@ El resultado se genera en `dist\ModbusSlavePro.exe`.
 
 ---
 
-## ⌨ Atajos de Teclado
-
-| Atajo | Acción |
-| :--- | :--- |
-| **F1** | Abrir ventana de atajos de teclado y comandos rápidos |
-| **F5** | Iniciar Servidor Modbus TCP |
-| **F6** | Detener Servidor Modbus TCP |
-| **F8** | Configurar Definición de Esclavo (*Slave Definition*) |
-| **Ctrl + G** | Ir a Dirección de Registro (*Go to Address*) |
-| **Enter / F2** | Editar in-line la celda seleccionada |
-| **Espacio** | Alternar estado `0` / `1` en Coils y Discrete Inputs |
-| **Ctrl + N** | Crear nuevo proyecto |
-| **Ctrl + O** | Abrir proyecto existente |
-| **Ctrl + S** | Guardar proyecto actual |
-| **Ctrl + C** | Copiar tramas seleccionadas en el sniffer al portapapeles |
-| **Alt + F4** | Cerrar la aplicación |
-
----
-
 ## 🧪 Pruebas Automatizadas
 
 Para ejecutar la suite de pruebas unitarias y de integración:
@@ -125,7 +107,12 @@ modbus-slave/
 ├── ModbusSlavePro.spec         # Configuración de compilación PyInstaller
 ├── requirements.txt            # Dependencias del proyecto
 ├── pyproject.toml              # Metadatos del paquete y configuración de pytest
+├── LICENSE                     # Licencia de código abierto MIT
+├── CONTRIBUTING.md             # Guía de contribución para desarrolladores
 ├── README.md                   # Documentación del proyecto
+├── .github/
+│   ├── workflows/              # Automatización CI/CD (Tests y Release .exe)
+│   └── ISSUE_TEMPLATE/         # Plantillas de soporte y bugs
 ├── modbus_slave/
 │   ├── main.py                 # Punto de entrada
 │   ├── core/
@@ -150,5 +137,5 @@ modbus-slave/
 │   │       └── simulation_dialog.py     # Configuración de simulación
 │   └── config/
 │       └── workspace.py        # Guardado y carga de sesiones en JSON
-└── tests/                      # Suite de pruebas automatizadas (34 tests)
+└── tests/                      # Suite de pruebas automatizadas (42 tests)
 ```

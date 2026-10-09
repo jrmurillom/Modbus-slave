@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentación del Proyecto
+    url: https://github.com/jrmurillom/Modbus-slave#readme
+    about: Consulta la documentación, características y modo de uso antes de abrir una issue.
+  - name: 🤝 Guía de Contribución
+    url: https://github.com/jrmurillom/Modbus-slave/blob/main/CONTRIBUTING.md
+    about: Aprende cómo configurar tu entorno y proponer cambios al código.

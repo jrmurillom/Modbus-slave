@@ -1,0 +1,35 @@
+name: "💡 Propuesta de Mejora (Feature Request)"
+description: "Propón una nueva funcionalidad o mejora técnica para Modbus Slave Pro"
+title: "[FEATURE]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ¡Gracias por sugerir una nueva idea para Modbus Slave Pro! Por favor detalla el caso de uso y el beneficio para la simulación industrial.
+  - type: textarea
+    id: problem
+    attributes:
+      label: ¿Existe un problema o limitación actual?
+      description: Describe el problema o la limitación actual que motiva esta solicitud.
+      placeholder: Actualmente no es posible...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solución propuesta
+      description: Explica detalladamente cómo te gustaría que funcionara la nueva característica.
+      placeholder: Proponer una nueva opción en el menú de herramientas que permita...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: ¿Has considerado otras opciones o soluciones temporales?
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Cualquier enlace a especificaciones de Modbus, capturas o diagramas que ayuden a entender la propuesta.
