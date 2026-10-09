@@ -5,6 +5,21 @@ Todos los cambios notables de este proyecto serán documentados en este archivo.
 El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/)
 y este proyecto se adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
+## [1.2.0] - 2026-10-08
+
+### Añadido
+- **Gobernanza de Código Abierto y Licenciamiento:**
+  - Licencia oficial MIT (`LICENSE`) a nombre de Roberto Murillo con blindaje legal y exención estricta de responsabilidad civil ("AS IS").
+  - Guía completa de contribución (`CONTRIBUTING.md`) para desarrolladores externos con estándares de arquitectura, pruebas y flujo de Pull Requests.
+  - Plantillas interactivas en `.github/ISSUE_TEMPLATE/` para reporte de fallos (`bug_report.yml`) y propuestas de mejoras (`feature_request.yml`).
+  - Plantilla de Pull Request (`PULL_REQUEST_TEMPLATE.md`) con lista de verificación de calidad y pruebas.
+- **Automatización CI/CD con GitHub Actions:**
+  - Pipeline de Integración Continua (`ci.yml`) que ejecuta automáticamente la suite de pruebas unitarias y de integración en Windows ante cada push o PR.
+  - Pipeline de Release (`release.yml`) que compila automáticamente `ModbusSlavePro.exe` mediante PyInstaller ante cada nuevo tag y lo publica en GitHub Releases.
+- **Documentación y Usabilidad:**
+  - Depuración de `README.md` retirando tablas duplicadas de atajos (gestionadas en la app con `F1`).
+  - Nuevas insignias de estado de CI, licencia MIT y enlace directo de descarga para el ejecutable autónomo.
+
 ## [1.1.1] - 2026-10-08
 
 ### Corregido
